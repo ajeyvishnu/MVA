@@ -1,0 +1,144 @@
+---
+title: "MVA_HW_1"
+author: "aa2569@scarletmail.rutgers.edu"
+date: "2/5/2023"
+output: html_document
+---
+
+## Loading the Sparrows file 
+
+```{r}
+library(readr)
+library(MVA)
+library(HSAUR2)
+Bumpus_sparrows <- read_csv("/Users/ajayvishnu/Desktop/Bumpus_sparrows.csv")
+sparr <- Bumpus_sparrows
+sparr
+```
+
+* We can see that the first column shows the Survivorship of the sparrows.
+* NS - Not Survived, S - Survived.
+* All the other 5 columns are numeric values.
+* Later let us divide the data into two subsets (Survived & Not survived and perform the analysis on them separately)
+
+## Separating into two different matrices
+
+```{r}
+ns_sparr <- subset(sparr, Survivorship == "NS")
+s_sparr <- subset(sparr, Survivorship == "S")
+ns_sparr
+s_sparr
+```
+
+* The survived and not survived data has been seperated now.
+* However, to perform the analysis, we need only the numeric data to be available.
+
+## Droping the first column
+
+```{r}
+ns_sp <- ns_sparr[,-1]
+s_sp <- s_sparr[,-1]
+ns_sp
+s_sp
+```
+
+* Further, we can calculate the column means, correlation, and covaraiance for the two datasets spearately and identify patterns.
+
+## Column Means
+
+```{r}
+colMeans(ns_sp)
+colMeans(s_sp)
+```
+
+* Except for L_humerous, rest all column means are larger for not survived sparrows.
+* Further, we can deep dive and see the covariance and correlation matrices.
+
+## Covariance Matrix
+
+```{r}
+cov(ns_sp)
+cov(s_sp)
+```
+
+* The covariance of two random variables is a measure of their linear dependence.
+* Larger values of the covariance imply a greater degree of linear dependence between two variables.
+* For both not survived and survived, we can observe high covaraince between Total_Length and the Alar_extent.
+* For both not survived and survived, we can observe least covaraince between L_humerous and the L_beak_head.
+* However, the covariance values are higher for the not survived sparrows compared to survived sparrows.
+
+## Correlation Matrix
+
+```{r}
+cor(ns_sp)
+cor(s_sp)
+```
+
+* Compared to covariance, correlation gives us better understanding between the two variables.
+* For not survived sparrows, we can see that the correlation is highest for the L_humerous and the L_beak_head and least for the L_keel_sternum and the L_beak_head.
+* For survived sparrows, we can see that the correlation is highest for the L_humerous and the Alar_extent and least for the L_keel_sternum and the Alar_extent.
+* We can see that these are different to that compared to our covaraince results.
+
+## Distance Matrix
+
+```{r}
+dist_ns = dist(scale(ns_sp[, c("Total_length","Alar_extent","L_beak_head","L_humerous","L_keel_sternum")],center = FALSE))
+dist_s = dist(scale(s_sp[, c("Total_length","Alar_extent","L_beak_head","L_humerous","L_keel_sternum")],center = FALSE))
+dist_ns
+dist_s
+```
+
+* The distance matrix gives us an idea of how like or unlike each pair of variables are in a dataframe.
+
+## Not Survived Plots
+
+```{r}
+ns_sp <- as.data.frame(ns_sp)
+cm_ns_sp <- colMeans(ns_sp)
+cov_ns_sp <- cov(ns_sp)
+d_ns <- apply(ns_sp, MARGIN = 1, function(ns_sp)t(ns_sp - cm_ns_sp) %*% solve(cov_ns_sp) %*% (ns_sp - cm_ns_sp))
+qqnorm(ns_sp[,"Total_length"], main = "Total_length"); qqline(ns_sp[,"Total_length"])
+qqnorm(ns_sp[,"Alar_extent"], main = "Alar_extent"); qqline(ns_sp[,"Alar_extent"])
+qqnorm(ns_sp[,"L_beak_head"], main = "L_beak_head"); qqline(ns_sp[,"L_beak_head"])
+qqnorm(ns_sp[,"L_humerous"], main = "L_humerous"); qqline(ns_sp[,"L_humerous"])
+qqnorm(ns_sp[,"L_keel_sternum"], main = "L_keel_sternum"); qqline(ns_sp[,"L_keel_sternum"])
+```
+
+* We can see that the L_beak_head and L_keel_sternum are the only two which appear to be normally distributed with slight exclusions.
+* The rest three are not normally distributed.
+
+```{r}
+plot(qc <- qchisq((1:nrow(ns_sp) - 1/2) / nrow(ns_sp), df = 5), sd <- sort(d_ns),xlab = expression(paste(chi[5]^2, " Quantile")),ylab = "Ordered distances")
+oups <- which(rank(abs(qc - sd), ties = "random") > nrow(ns_sp) - 3)
+text(qc[oups], sd[oups] - 1.5,oups)
+abline(a = 0, b = 1)
+```
+
+* This distribution is also not normally distributed.
+* There are also 3 outliers in the data which are observation 20, 24, and 28 in the ns_sp data frame.
+
+## Survived Plots
+
+```{r}
+s_sp <- as.data.frame(s_sp)
+cm_s_sp <- colMeans(s_sp)
+cov_s_sp <- cov(s_sp)
+d_s <- apply(s_sp, MARGIN = 1, function(s_sp)t(s_sp - cm_s_sp) %*% solve(cov_s_sp) %*% (s_sp - cm_s_sp))
+qqnorm(s_sp[,"Total_length"], main = "Total_length"); qqline(s_sp[,"Total_length"])
+qqnorm(s_sp[,"Alar_extent"], main = "Alar_extent"); qqline(s_sp[,"Alar_extent"])
+qqnorm(s_sp[,"L_beak_head"], main = "L_beak_head"); qqline(s_sp[,"L_beak_head"])
+qqnorm(s_sp[,"L_humerous"], main = "L_humerous"); qqline(s_sp[,"L_humerous"])
+qqnorm(s_sp[,"L_keel_sternum"], main = "L_keel_sternum"); qqline(s_sp[,"L_keel_sternum"])
+```
+
+* For Survived sparrows, none of the 5 columns appear to be normally distributed.
+
+```{r}
+plot(qc1 <- qchisq((1:nrow(s_sp) - 1/2) / nrow(s_sp), df = 5), sd1 <- sort(d_s),xlab = expression(paste(chi[5]^2, " Quantile")),ylab = "Ordered distances")
+oups <- which(rank(abs(qc1 - sd1), ties = "random") > nrow(s_sp) - 3)
+text(qc[oups], sd[oups] - 1.5,oups)
+abline(a = 0, b = 1)
+```
+
+* This distribution is also not normally distributed.
+* There are also 3 outliers in the data which are observation 18, 19, and 20 in the s_sp data frame.
