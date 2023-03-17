@@ -1,0 +1,178 @@
+---
+title: "Exploratory_Factor_Analysis"
+output: html_document
+date: "03/15/2023"
+---
+
+## Importing the complete college dataset
+  
+```{r}
+library(psych)
+
+clg <- read.csv("/Users//ajayvishnu/Desktop/RUTGERS/Spring 2023/Multivariate Analysis/Datasets/College_Data.csv", row.names=1)
+
+attach(clg)
+```
+
+* Apps - Number of applications received
+* Accept - Number of applications accepted
+* Enroll - Number of new students enrolled
+* Top10perc - Pct. new students from top 10% of H.S. class
+* Top25perc - Pct. new students from top 25% of H.S. class
+* F.Undergrad - Number of full-time undergraduates
+* P.Undergrad - Number of part-time undergraduates
+* Outstate - Out-of-state tuition
+* Room.Board - Room and board costs
+* Books - Estimated book costs
+* Personal - Estimated personal spending
+* PhD - Pct. of faculty with Ph.D.’s
+* Terminal - Pct. of faculty with terminal degree
+* S.F.Ratio - Student/faculty ratio
+* perc.alumni - Pct. alumni who donate
+* Expend - Instructional expenditure per student
+* Grad_Rate - Graduation rate
+
+## Using the varimax method
+
+#### RC values, h2 & u2 values
+
+```{r}
+fit.pc <- principal(clg[-1], nfactors=4, rotate="varimax")
+fit.pc
+```
+
+* h2 - Explained variance
+* u2 - Unexplained variance
+* h2 nd u2 add up to 1
+* The Proportion explained shows us the PCA values
+
+#### Eigen Values
+
+```{r}
+fit.pc$values
+round(fit.pc$values, 3)
+```
+
+* The above are the eigen values.
+
+#### Clubbing columns to RCs
+
+```{r}
+fit.pc$loadings
+```
+
+* We need to look for values over 0.5
+* RC1 shows relation with Outstate, Expend, Top10perc, Room.Board, Grad.Rate, Top25perc, perc.alumni and negative with S.F.Ratio
+* RC2 shows relation with Accept, Enroll, Apps, F.Undergrad, P.Undergrad
+* RC4 shows relation with PhD and Terminal
+* RC3 shows relation with Books and Personal
+
+#### Loadings with more digits
+
+```{r}
+for (i in c(1,3,2,4)) { print(fit.pc$loadings[[1,i]])}
+```
+
+#### Communalities
+
+```{r}
+fit.pc$communality
+```
+
+#### Rotated factor scores, Notice the columns ordering: RC1, RC2, RC4 and RC3
+
+```{r}
+fit.pc$scores
+```
+
+#### Factor Recommendation
+
+```{r}
+fa.parallel(clg[-1])
+```
+
+* Plot shows elbow at 3
+
+#### Correlations within Factors
+
+```{r}
+fa.plot(fit.pc)
+```
+
+#### Visualizing the relationship
+
+```{r}
+fa.diagram(fit.pc)
+```
+
+* RC1 - RC1 consisted of multiple aspects and is hard to interpret
+* RC2 - RC2 summed up the applications, enrollements and the students aspects of the dataset.
+* RC3 - RC3 summed up the expenses part in the dataset
+* RC4 - RC4 summed up the faculty in the dataset
+
+#### Factor recommendations for a simple structure
+
+```{r}
+vss(clg[-1])
+```
+
+* Till 3 there is change, from 3 no change
+* This is how we decide number of factors
+
+## Using oblimin rotate method
+
+#### RC values, h2 & u2 values
+
+```{r}
+fit.pc1 <- principal(clg[-1], nfactors=4, rotate="oblimin")
+fit.pc1
+```
+
+#### Eigen Values
+
+```{r}
+fit.pc1$values
+round(fit.pc1$values, 3)
+```
+
+#### Clubbing columns to RCs
+
+```{r}
+fit.pc1$loadings
+```
+
+* We need to look for values over 0.5
+* TC1 shows relation with Top10perc, Top25perc, Expend, PhD, Terminal, Outstate, Grade.Rate, Room.Board
+* TC2 shows relation with F.Undergrad, Enroll, Accept, Apps, P.Undergrad, S.F.Ratio, and negative with perc.alumni
+* TC3 shows relation with Books and Terminal
+
+#### Loadings with more digits
+
+```{r}
+for (i in c(1,3,2,4)) { print(fit.pc1$loadings[[1,i]])}
+```
+
+#### Communalities
+
+```{r}
+fit.pc1$communality
+```
+
+#### Rotated factor scores, Notice the columns ordering: RC1, RC2, RC4 and RC3
+
+```{r}
+fit.pc1$scores
+```
+
+#### Correlations within Factors
+
+```{r}
+fa.plot(fit.pc1)
+```
+
+#### Visualizing the relationship
+
+```{r}
+fa.diagram(fit.pc1)
+```
+
